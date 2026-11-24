@@ -1,7 +1,7 @@
-fn main() {
-    let input = utils::read_input("./input.txt");
+const INPUT: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/input.txt"));
 
-    let masses = split_input(&input);
+fn main() {
+    let masses = split_input(INPUT);
 
     let answer_one = part_1(&masses);
 
@@ -13,31 +13,28 @@ fn main() {
 }
 
 fn part_1(masses: &[i32]) -> i32 {
-    masses.iter().map(get_fuel).sum()
+    masses.iter().copied().map(get_fuel).sum()
 }
 
 fn part_2(masses: &[i32]) -> i32 {
-    masses.iter().map(get_fuel_for_fuel).sum()
+    masses.iter().copied().map(get_fuel_for_fuel).sum()
 }
 
-fn get_fuel(mass: &i32) -> i32 {
+fn get_fuel(mass: i32) -> i32 {
     (mass / 3) - 2
 }
 
-fn get_fuel_for_fuel(mass: &i32) -> i32 {
-    let fuel = get_fuel(mass);
-    if fuel < 0 {
-        0
-    } else {
-        fuel + get_fuel_for_fuel(&fuel)
-    }
+fn get_fuel_for_fuel(mass: i32) -> i32 {
+    std::iter::successors(Some(get_fuel(mass)), |&f| Some(get_fuel(f)))
+        .take_while(|&f| f > 0)
+        .sum()
 }
 
 fn split_input(input: &str) -> Vec<i32> {
     input
-        .split("\n")
+        .lines()
         .filter(|x| !x.is_empty())
-        .map(|x| x.parse::<i32>().expect("value should be an integer"))
+        .map(|x| x.parse().expect("value should be an integer"))
         .collect()
 }
 
@@ -47,29 +44,21 @@ mod tests {
 
     #[test]
     fn test_get_fuel() {
-        let inputs: [i32; 4] = [12, 14, 1969, 100756];
-        let outputs: [i32; 4] = [2, 2, 654, 33583];
-
-        for (i, v) in inputs.iter().enumerate() {
-            assert_eq!(get_fuel(v), outputs[i])
+        for (mass, expected) in [(12, 2), (14, 2), (1969, 654), (100756, 33583)] {
+            assert_eq!(get_fuel(mass), expected, "mass {mass}")
         }
     }
 
     #[test]
     fn test_get_fuel_for_fuel() {
-        let inputs: [i32; 3] = [14, 1969, 100756];
-        let outputs: [i32; 3] = [2, 966, 50346];
-
-        for (i, v) in inputs.iter().enumerate() {
-            assert_eq!(get_fuel_for_fuel(v), outputs[i])
+        for (mass, expected) in [(14, 2), (1969, 966), (100756, 50346)] {
+            assert_eq!(get_fuel_for_fuel(mass), expected, "mass {mass}")
         }
     }
 
     #[test]
     fn test_split_input() {
-        let input = "1
-2
-3";
+        let input = "1\n2\n3";
         assert_eq!(split_input(input), vec![1, 2, 3]);
     }
 }

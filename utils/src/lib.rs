@@ -1,7 +1,8 @@
-use std::fs;
+use std::{fs, path::Path};
 
-pub fn read_input(path: &str) -> String {
-    fs::read_to_string(path).expect("Could not read file")
+pub fn read_input(path: impl AsRef<Path>) -> String {
+    let path = path.as_ref();
+    fs::read_to_string(path).unwrap_or_else(|e| panic!("could not read {}: {e}", path.display()))
 }
 
 #[cfg(test)]
